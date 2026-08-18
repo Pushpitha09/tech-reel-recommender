@@ -1,0 +1,8 @@
+{
+  "name": "Tech Reel Recommender",
+  "description": "AI-powered social media reel recommender that extracts latent technical interests, penalizes clickbait and hype, tracks session interest evolution, and provides curated tech video recommendations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
