@@ -301,12 +301,6 @@ export default function App() {
       <DemoTrailsModal
         isOpen={isDemoTrailsOpen}
         onClose={() => setIsDemoTrailsOpen(false)}
-        onSelectTrail={(trail) => {
-          const firstReel = reelsCatalog.find((r) => r.id === trail.initialReelId);
-          if (firstReel) {
-            handleSelectReel(firstReel);
-          }
-        }}
         onSelectReel={handleSelectReel}
       />
     </div>

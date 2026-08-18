@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Sparkles, Plus, AlertCircle, Bot } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Plus, AlertCircle, Bot, Sparkles } from 'lucide-react';
 import { ReelItem } from '../types';
 
 interface SubmitReelModalProps {
@@ -22,6 +22,31 @@ export const SubmitReelModal: React.FC<SubmitReelModalProps> = ({
   const [author, setAuthor] = useState('Guest Engineer');
   const [error, setError] = useState('');
 
+  const modalRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus trap & Escape key listener
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Focus initial input
+    const timer = setTimeout(() => {
+      titleInputRef.current?.focus();
+    }, 50);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -37,8 +62,6 @@ export const SubmitReelModal: React.FC<SubmitReelModalProps> = ({
       .filter((t) => t.length > 0)
       .map((t) => (t.startsWith('#') ? t : `#${t}`));
 
-    // Note: Category and Difficulty are NOT passed as inputs from user dropdowns
-    // The AI determines both automatically from content and transcript
     const customReel: ReelItem = {
       id: `custom-${Date.now()}`,
       title: title.trim(),
@@ -74,29 +97,48 @@ export const SubmitReelModal: React.FC<SubmitReelModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="submit-modal-title"
+      aria-describedby="submit-modal-description"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div 
+        ref={modalRef}
+        className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden focus:outline-none"
+        tabIndex={-1}
+      >
         {/* Header */}
         <div className="p-4 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between bg-stone-50 dark:bg-stone-950/60">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-500/30">
+            <div 
+              className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-500/30"
+              aria-hidden="true"
+            >
               <Plus className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+              <h3 id="submit-modal-title" className="text-sm font-bold text-stone-900 dark:text-stone-100">
                 Submit Reel for Latent AI Recommendation
               </h3>
-              <p className="text-[11px] text-stone-500 dark:text-stone-400">
+              <p id="submit-modal-description" className="text-[11px] text-stone-500 dark:text-stone-400">
                 Provide title and transcript — AI will automatically infer Category & Difficulty
               </p>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+            aria-label="Close dialog"
+            className="p-1.5 rounded-lg text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
+            <span className="sr-only">Close</span>
           </button>
         </div>
 
@@ -105,7 +147,7 @@ export const SubmitReelModal: React.FC<SubmitReelModalProps> = ({
           <span className="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
             Quick Fill Templates
           </span>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Sample Reel Presets">
             <button
               type="button"
               onClick={() =>
@@ -117,7 +159,8 @@ export const SubmitReelModal: React.FC<SubmitReelModalProps> = ({
                   hashtags: '#lowlevel, #hft, #cache, #cpp, #perf',
                 })
               }
-              className="px-2.5 py-1 rounded-md bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 dark:text-stone-300 dark:border-stone-700 text-[11px] font-medium transition-colors cursor-pointer"
+              aria-label="Load HFT Cache Line Optimization preset"
+              className="px-2.5 py-1 rounded-md bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 dark:text-stone-300 dark:border-stone-700 text-[11px] font-medium transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
             >
               HFT Cache Line Optimization
             </button>
@@ -133,7 +176,8 @@ export const SubmitReelModal: React.FC<SubmitReelModalProps> = ({
                   hashtags: '#passiveincome, #makemoney, #chatgpt, #aihype',
                 })
               }
-              className="px-2.5 py-1 rounded-md bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 dark:border-amber-500/30 dark:text-amber-300 text-[11px] font-medium transition-colors cursor-pointer"
+              aria-label="Load AI Hype / Clickbait Test preset"
+              className="px-2.5 py-1 rounded-md bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 dark:border-amber-500/30 dark:text-amber-300 text-[11px] font-medium transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
             >
               AI Hype / Clickbait Test
             </button>
@@ -149,7 +193,8 @@ export const SubmitReelModal: React.FC<SubmitReelModalProps> = ({
                   hashtags: '#opentelemetry, #grpc, #golang, #microservices',
                 })
               }
-              className="px-2.5 py-1 rounded-md bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 dark:text-stone-300 dark:border-stone-700 text-[11px] font-medium transition-colors cursor-pointer"
+              aria-label="Load Distributed OpenTelemetry preset"
+              className="px-2.5 py-1 rounded-md bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 dark:text-stone-300 dark:border-stone-700 text-[11px] font-medium transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
             >
               Distributed OpenTelemetry
             </button>
@@ -159,91 +204,102 @@ export const SubmitReelModal: React.FC<SubmitReelModalProps> = ({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-4 overflow-y-auto flex flex-col gap-4 flex-1">
           {error && (
-            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-500/30 dark:text-rose-300 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <div 
+              role="alert" 
+              className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-500/30 dark:text-rose-300 text-xs flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" aria-hidden="true" />
               <span>{error}</span>
             </div>
           )}
 
           {/* AI Notice Banner */}
           <div className="p-3 rounded-xl bg-indigo-50/70 border border-indigo-200 dark:bg-indigo-950/30 dark:border-indigo-800/60 text-xs text-indigo-900 dark:text-indigo-200 flex items-start gap-2.5">
-            <Bot className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+            <Bot className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" aria-hidden="true" />
             <div>
-              <span className="font-semibold">Automatic Categorization & Difficulty:</span> You no longer need to pick a category or difficulty. The Gemini AI will extract technical complexity and domain classification automatically from your video's content and transcript.
+              <span className="font-semibold">Automatic Categorization & Difficulty:</span> The Gemini AI model extracts technical complexity, latent signals, and domain classification automatically from your video's content and transcript.
             </div>
           </div>
 
           {/* Title */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center justify-between">
+            <label htmlFor="submit-title" className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center justify-between">
               <span>Reel Title *</span>
               <span className="text-[10px] text-stone-500 dark:text-stone-400 font-normal">Headline or video title</span>
             </label>
             <input
+              ref={titleInputRef}
+              id="submit-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Why Rust's Borrow Checker Saved Our Prod Database"
-              className="px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-300 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:outline-none focus:border-indigo-500 transition-colors"
+              className="px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-300 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:outline-none focus:border-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
               required
+              aria-required="true"
             />
           </div>
 
           {/* Caption */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+            <label htmlFor="submit-caption" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
               Reel Caption / Social Post
             </label>
             <input
+              id="submit-caption"
               type="text"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="e.g. Stop chasing data races at 3 AM. Lifetime tracking explained."
-              className="px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-300 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:outline-none focus:border-indigo-500 transition-colors"
+              className="px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-300 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:outline-none focus:border-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
             />
           </div>
 
           {/* Transcript */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center justify-between">
+            <label htmlFor="submit-transcript" className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center justify-between">
               <span>Spoken Video Transcript *</span>
               <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">Used for Latent Interest Extraction</span>
             </label>
             <textarea
+              id="submit-transcript"
               rows={4}
               value={transcript}
               onChange={(e) => setTranscript(e.target.value)}
               placeholder="Enter or paste the spoken audio transcript of what happens in the video..."
-              className="px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-300 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:outline-none focus:border-indigo-500 transition-colors leading-relaxed"
+              className="px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-300 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:outline-none focus:border-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors leading-relaxed"
               required
+              aria-required="true"
             />
           </div>
 
           {/* Hashtags & Author */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+              <label htmlFor="submit-hashtags" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                 Hashtags (comma separated)
               </label>
               <input
+                id="submit-hashtags"
                 type="text"
                 value={hashtags}
                 onChange={(e) => setHashtags(e.target.value)}
                 placeholder="#rust, #concurrency, #database"
-                className="px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-300 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:outline-none focus:border-indigo-500"
+                className="px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-300 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:outline-none focus:border-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-500"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+              <label htmlFor="submit-author" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                 Creator / Channel Name
               </label>
               <input
+                id="submit-author"
                 type="text"
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="Elena Rostova"
-                className="px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-300 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:outline-none focus:border-indigo-500"
+                className="px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-300 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:outline-none focus:border-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-500"
               />
             </div>
           </div>
@@ -253,16 +309,16 @@ export const SubmitReelModal: React.FC<SubmitReelModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 dark:bg-stone-800 dark:hover:bg-stone-700 dark:text-stone-300 text-xs font-medium transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 dark:bg-stone-800 dark:hover:bg-stone-700 dark:text-stone-300 text-xs font-medium transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Analyze & Get Recommendation</span>
             </button>
           </div>

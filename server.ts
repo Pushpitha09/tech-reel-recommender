@@ -295,7 +295,7 @@ Return structured JSON adhering to the specified schema.`;
 }
 
 // Fallback recommendation generator with support for Non-Technical, Borderline, and Deep Tech
-function generateSmartFallbackRecommendation(currentReel: any, sessionHistory: any[], currentProfile: any[]) {
+export function generateSmartFallbackRecommendation(currentReel: any, sessionHistory: any[] = [], currentProfile: any[] = INITIAL_INTEREST_DOMAINS) {
   const text = `${currentReel.title} ${currentReel.caption || ""} ${currentReel.transcript || ""}`.toLowerCase();
 
   const isDanceOrComedy = text.includes("dance") || text.includes("shuffle") || text.includes("comedy") || text.includes("skit") || text.includes("pasta") || text.includes("recipe") || text.includes("canyon") || text.includes("sneaker") || text.includes("asmr") || text.includes("grocery");
@@ -306,7 +306,7 @@ function generateSmartFallbackRecommendation(currentReel: any, sessionHistory: a
   const isBorderlineStreamer = text.includes("obs") || text.includes("nvenc") || text.includes("av1") || text.includes("encoding") || text.includes("dropped frames") || (text.includes("streamer") && text.includes("tuning"));
   const isBorderline = (isBorderlineUnboxing || isBorderlineStreamer) && !isPureNonTechnical;
 
-  const isHype = text.includes("make $") || text.includes("without coding") || text.includes("secret prompt") || text.includes("15 minutes") || text.includes("guaranteed job") || text.includes("dead");
+  const isHype = text.includes("make $") || text.includes("without coding") || text.includes("secret prompt") || text.includes("in 15 minutes") || text.includes("guaranteed job") || text.includes("is dead") || text.includes("are dead") || text.includes("earn $");
 
   if (isPureNonTechnical) {
     const defaultCandidate = CANDIDATE_RECOMMENDATION_REELS[4] || CANDIDATE_RECOMMENDATION_REELS[0]; // Event loop
@@ -544,4 +544,6 @@ function generateSmartFallbackRecommendation(currentReel: any, sessionHistory: a
   };
 }
 
-startServer();
+if (process.env.NODE_ENV !== "test" && !process.env.VITEST) {
+  startServer();
+}

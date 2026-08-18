@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Layers, History, Activity, Brain } from 'lucide-react';
+import { ChevronDown, ChevronUp, Layers, Activity, Brain } from 'lucide-react';
 import { InterestProfileDashboard } from './InterestProfileDashboard';
 import { SessionTimeline } from './SessionTimeline';
 import { InterestDomain, RecommendationResult, SessionHistoryEntry } from '../types';
@@ -25,21 +25,27 @@ export const DetailedReasoningAccordion: React.FC<DetailedReasoningAccordionProp
     <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl shadow-md transition-all overflow-hidden">
       {/* Toggle Header Button */}
       <button
+        type="button"
+        id="detailed-reasoning-toggle"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-5 py-3.5 flex items-center justify-between bg-stone-50/70 dark:bg-stone-950/60 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors cursor-pointer text-left"
         aria-expanded={isOpen}
+        aria-controls="detailed-reasoning-content"
+        className="w-full px-5 py-3.5 flex items-center justify-between bg-stone-50/70 dark:bg-stone-950/60 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors cursor-pointer text-left focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-800">
+          <div 
+            className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-800"
+            aria-hidden="true"
+          >
             <Brain className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-xs sm:text-sm font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
+            <h3 className="text-xs sm:text-sm font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
               Detailed Reasoning & Technical Trace
               <span className="text-[11px] font-normal text-stone-500 dark:text-stone-400">
                 (Interest Profile, Deduction Steps & Interaction Trail)
               </span>
-            </h4>
+            </h3>
           </div>
         </div>
 
@@ -48,20 +54,25 @@ export const DetailedReasoningAccordion: React.FC<DetailedReasoningAccordionProp
             {isOpen ? 'Hide detailed reasoning' : 'Show detailed reasoning'}
           </span>
           <div className="w-6 h-6 rounded-full bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 flex items-center justify-center">
-            {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {isOpen ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
           </div>
         </div>
       </button>
 
       {/* Collapsible Content Body */}
       {isOpen && (
-        <div className="p-5 flex flex-col gap-6 border-t border-stone-200 dark:border-stone-800 bg-stone-50/30 dark:bg-stone-950/30 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div 
+          id="detailed-reasoning-content"
+          role="region"
+          aria-labelledby="detailed-reasoning-toggle"
+          className="p-5 flex flex-col gap-6 border-t border-stone-200 dark:border-stone-800 bg-stone-50/30 dark:bg-stone-950/30 animate-in fade-in slide-in-from-top-2 duration-200"
+        >
           {/* AI Recommender Deduction Path */}
           {result.reasoningSteps && result.reasoningSteps.length > 0 && (
             <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-4 flex flex-col gap-2.5 shadow-sm">
               <span className="text-[11px] font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                AI Deduction Path & Logical Flow
+                <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />
+                <span>AI Deduction Path & Logical Flow</span>
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-stone-600 dark:text-stone-300">
                 {result.reasoningSteps.map((step, idx) => (
